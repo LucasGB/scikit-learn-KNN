@@ -103,9 +103,9 @@ if __name__ == '__main__':
 	arg_parser = argparse.ArgumentParser()
 	arg_parser.add_argument("trainning_file", help="arquivo de treinamento")
 	arg_parser.add_argument("test_file", help="arquivo de teste")
+	arg_parser.add_argument("k", help="k")
 	arg_parser.add_argument('--sections', nargs='+', type=float, default=[], help='List of sections to use.')
 	arg_parser = arg_parser.parse_args()
-	
 	separateFiles(arg_parser.trainning_file, arg_parser.test_file, sorted(arg_parser.sections))
 	
 	trainningLabelsFile = arg_parser.trainning_file+'_labels.txt'
@@ -122,7 +122,7 @@ if __name__ == '__main__':
 
 
 
-	neigh = KNeighborsClassifier(n_neighbors=1)
+	neigh = KNeighborsClassifier(n_neighbors=arg_parser.k)
 	neigh.fit(trainning_characteristics, trainning_labels)
 
 	classified = neigh.predict(test_characteristics)
