@@ -5,9 +5,6 @@ from scipy import spatial
 from sys import argv
 import numpy  as np
 
-#python scitkit_knn.py base\ para\ scikit-learn/Base\ 2/arquivoTreino.txt base\ para\ scikit-learn/Base\ 2/arquivoTeste.txt
-#python scitkit_knn.py base\ para\ scikit-learn/Base\ 1/BFL_50_Carta2.txt base\ para\ scikit-learn/Base\ 1/BFL_50_Carta3.txt
-
 def separateFiles(trainningFile, testFile):
 	with open(trainningFile, 'r') as file:
 		data = np.loadtxt(file)
