@@ -3,65 +3,124 @@ from sklearn.metrics import confusion_matrix, accuracy_score
 from scipy import stats
 from scipy import spatial
 from sys import argv
+import argparse
+
 import numpy  as np
 
-def separateFiles(trainningFile, testFile):
-	with open(trainningFile, 'r') as file:
-		data = np.loadtxt(file)
-		labels = data[:, [len(data[0])-1]]
-		characteristics = np.delete(data, -1, 1)
+def separateFiles(trainningFile, testFile, sections):	
+	if(len(sections) == 0):
+		with open(trainningFile, 'r') as file:
+			labels = []
+			characteristics = []
 
-		trainningLabelsFile = trainningFile+'_labels.txt'
-		trainningCharacteristicsFile = trainningFile+'_characteristics.txt'
+			data = np.loadtxt(file)
+			for line in data:
+				labels.append(line[len(data[0])-1])		
 
-		np.savetxt(trainningLabelsFile, labels)
-		np.savetxt(trainningCharacteristicsFile, characteristics)
+			for line in data:
+				characteristics.append(line[:-1])
 
-	with open(testFile, 'r') as file:
-		data = np.loadtxt(file)
-		labels = data[:, [len(data[0])-1]]
-		characteristics = np.delete(data, -1, 1)
+			trainningLabelsFile = trainningFile+'_labels.txt'
+			trainningCharacteristicsFile = trainningFile+'_characteristics.txt'
 
-		testLabelsFile = testFile+'_labels.txt'
-		testCharacteristicsFile = testFile+'_characteristics.txt'
+			np.savetxt(trainningLabelsFile, labels)
+			np.savetxt(trainningCharacteristicsFile, characteristics)
 
-		np.savetxt(testLabelsFile, labels)
-		np.savetxt(testCharacteristicsFile, characteristics)
+		with open(testFile, 'r') as file:
+			labels = []
+			characteristics = []
+					
+			data = np.loadtxt(file)
+			for line in data:
+				labels.append(line[len(data[0])-1])		
+
+			for line in data:
+				characteristics.append(line[:-1])
+
+			testLabelsFile = testFile+'_labels.txt'
+			testCharacteristicsFile = testFile+'_characteristics.txt'
+
+			np.savetxt(testLabelsFile, labels)
+			np.savetxt(testCharacteristicsFile, characteristics)
+	
+	else:
+		with open(trainningFile, 'r') as file:
+			labels = []
+			characteristics = []
+
+			data = np.loadtxt(file)
+			for s in sections:
+				for line in data:
+					if(line[len(data[0])-1] == s):
+						labels.append(line[len(data[0])-1])		
+
+			for s in sections:
+				for line in data:
+					if(line[len(data[0])-1] == s):
+						characteristics.append(line[:-1])
+
+			trainningLabelsFile = trainningFile+'_labels.txt'
+			trainningCharacteristicsFile = trainningFile+'_characteristics.txt'
+
+			np.savetxt(trainningLabelsFile, labels)
+			np.savetxt(trainningCharacteristicsFile, characteristics)
+
+		with open(testFile, 'r') as file:
+			labels = []
+			characteristics = []
+					
+			data = np.loadtxt(file)
+			for s in sections:
+				for line in data:
+					if(line[len(data[0])-1] == s):
+						labels.append(line[len(data[0])-1])		
+
+
+			for s in sections:
+				for line in data:
+					if(line[len(data[0])-1] == s):
+						characteristics.append(line[:-1])
+
+			testLabelsFile = testFile+'_labels.txt'
+			testCharacteristicsFile = testFile+'_characteristics.txt'
+
+			np.savetxt(testLabelsFile, labels)
+			np.savetxt(testCharacteristicsFile, characteristics)
+
 
 def extract(fileName):
 	with open(fileName) as file:
 		data = np.loadtxt(file)
 	return data
 
-
-def buildConfusionMatrix(classified, trainning_labels, test_labels):
-	n_rows = len(trainning_labels)
-	n_columns = len(trainning_labels)
-	
-	# Creates a list with unique labels names from the trainning labels
-	used = set()
-	distinctLabels = [x for x in trainning_labels if x not in used and (used.add(x) or True)]
+def buildConfusionMatrix(classified, test_labels):	
 	confusionMatrix = confusion_matrix(test_labels, classified)
-
 	return confusionMatrix
 
 
 
 if __name__ == '__main__':
-	separateFiles(argv[1], argv[2])
-
-
-	trainningLabelsFile = argv[1]+'_labels.txt'
-	trainningCharacteristicsFile = argv[1]+'_characteristics.txt'	
+	arg_parser = argparse.ArgumentParser()
+	arg_parser.add_argument("trainning_file", help="arquivo de treinamento")
+	arg_parser.add_argument("test_file", help="arquivo de teste")
+	arg_parser.add_argument('--sections', nargs='+', type=float, default=[], help='List of sections to use.')
+	arg_parser = arg_parser.parse_args()
+	
+	separateFiles(arg_parser.trainning_file, arg_parser.test_file, sorted(arg_parser.sections))
+	
+	trainningLabelsFile = arg_parser.trainning_file+'_labels.txt'
+	trainningCharacteristicsFile = arg_parser.trainning_file+'_characteristics.txt'	
 
 	trainning_labels = extract(trainningLabelsFile)
 	trainning_characteristics = extract(trainningCharacteristicsFile)
 
-	testLabelsFile = argv[2]+'_labels.txt'
-	testCharacteristicsFile = argv[2]+'_characteristics.txt'
+	testLabelsFile = arg_parser.test_file+'_labels.txt'
+	testCharacteristicsFile = arg_parser.test_file+'_characteristics.txt'
 
 	test_labels = extract(testLabelsFile)
 	test_characteristics = extract(testCharacteristicsFile)
+
+
 
 	neigh = KNeighborsClassifier(n_neighbors=1)
 	neigh.fit(trainning_characteristics, trainning_labels)
@@ -70,7 +129,7 @@ if __name__ == '__main__':
 	prob = neigh.predict_proba(test_characteristics)
 
 
-	matrix = buildConfusionMatrix(classified, trainning_labels, test_labels)
+	matrix = buildConfusionMatrix(classified, test_labels)
 
 	for i in matrix:
 		print i
